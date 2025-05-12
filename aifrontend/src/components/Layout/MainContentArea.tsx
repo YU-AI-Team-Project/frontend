@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { LeftSidebar, RightSidebar } from '../Sidebar';
+import { StockSidebar, RightSidebar } from '../Sidebar';
 import CentralArea from './CentralArea';
 
 interface MainContentAreaProps {
@@ -20,7 +20,7 @@ const MainContentArea: React.FC<MainContentAreaProps> = () => {
 
   return (
     <main style={mainContentStyle}>
-      <LeftSidebar />
+      <StockSidebar />
       <CentralArea />
       <RightSidebar />
     </main>
