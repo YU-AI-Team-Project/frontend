@@ -1,12 +1,10 @@
-import React from "react";
-import FinanceTab from "./components/FinanceInfo/FinanceTab"; 
+
+import React from 'react';
+import OpensourceSWPage from './pages/OpensourceSWPage'; // Added
 
 function App() {
   return (
-    <div className="App">
-      <h1></h1>
-      <FinanceTab />
-    </div>
+    <OpensourceSWPage /> // Added
   );
 }
 
