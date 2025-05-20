@@ -23,14 +23,6 @@ const Header: React.FC<HeaderProps> = () => {
     // color: '#000000' // fill_I931BD - default black, often not needed to specify
   };
 
-  // Style from Figma: 'Plan Discount' (5:9) textStyle: style_BBQ3HB
-  const planDiscountStyle: React.CSSProperties = {
-    fontFamily: 'Inter, sans-serif',
-    fontWeight: 400,
-    fontSize: '14px',
-    marginLeft: '15px', // Spacing from logo
-  };
-
   // Style from Figma: 'Search Bar' (5:10) has fills: fill_9FOGMN ('#F2F2F2')
   const searchBarStyle: React.CSSProperties = {
     backgroundColor: '#F2F2F2',
@@ -56,28 +48,30 @@ const Header: React.FC<HeaderProps> = () => {
 
   // Style for Icons (5:12 - 5:16), fills: fill_SSJY87 ('#CCCCCC')
   const iconStyle: React.CSSProperties = {
-    width: '24px', // Placeholder size
-    height: '24px', // Placeholder size
-    backgroundColor: '#CCCCCC',
+    fontFamily: 'Inter, sans-serif',
+    fontWeight: 400,
+    fontSize: '14px',
+    color: '#000000',
+    backgroundColor: '#F0F0F0',
+    padding: '8px 15px',
     borderRadius: '4px',
     marginLeft: '10px',
+    cursor: 'pointer',
+    textAlign: 'center',
+    border: '1px solid #DCDCDC'
   };
 
   return (
     <header style={headerStyle}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <div style={logoStyle}>알파스퀘어</div>
-        <div style={planDiscountStyle}>플랜20%할인</div>
       </div>
       <div style={searchBarStyle}>
         <input type="text" placeholder="Q 종목 검색 (Alt + s)" style={searchPlaceholderStyle} />
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={iconStyle} title="Icon 1"></div>
-        <div style={iconStyle} title="Icon 2"></div>
-        <div style={iconStyle} title="Icon 3"></div>
-        <div style={iconStyle} title="Icon 4"></div>
-        <div style={iconStyle} title="Icon 5"></div>
+        <div style={iconStyle}>로그인</div>
+        <div style={iconStyle}>회원가입</div>
       </div>
     </header>
   );

@@ -17,6 +17,47 @@
   margin-right: 8px;
 }
 
+.watchlist-selector {
+  flex: 1;
+  padding: 4px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fafafa;
+  font-size: 14px;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.error-state {
+  padding: 15px;
+  background-color: #fff0f0;
+  border: 1px solid #ffcccc;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.error-state p {
+  color: #cc0000;
+  margin: 0 0 10px 0;
+  font-size: 14px;
+}
+
+.error-state button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
 .add-btn {
   width: 100%;
   padding: 6px;
