@@ -1,0 +1,48 @@
+.sidebar {
+  width: 280px;
+  border-right: 1px solid #ccc;
+  padding: 10px;
+}
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.add-btn {
+  margin: 10px 0;
+}
+.category-title {
+  margin-top: 10px;
+  font-weight: bold;
+}
+.stock-item {
+  padding: 6px;
+  cursor: pointer;
+}
+.stock-item.selected {
+  background-color: #eee;
+}
+.positive {
+  color: red;
+}
+.negative {
+  color: blue;
+}
+.modal {
+  position: fixed;
+  top: 100px;
+  left: 100px;
+  background: white;
+  padding: 20px;
+  border: 1px solid #ccc;
+}
+.search-results {
+  max-height: 200px;
+  overflow-y: auto;
+}
+.search-item {
+  padding: 5px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
