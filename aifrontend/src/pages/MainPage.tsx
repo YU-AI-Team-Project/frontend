@@ -4,11 +4,11 @@ import Header from '../components/Header';
 import MainContentArea from '../components/Layout/MainContentArea';
 import BottomLeftAdBanner from '../components/Banners/BottomLeftAdBanner';
 
-interface OpensourceSWPageProps {
+interface MainPageProps {
   // Define props if any, for now, it's empty
 }
 
-const OpensourceSWPage: React.FC<OpensourceSWPageProps> = () => {
+const MainPage: React.FC<MainPageProps> = () => {
   // Style from Figma: 'Overall Page' (5:2) has fills: fill_MP4YOM ('#F5F5F5')
   const pageStyle: React.CSSProperties = {
     backgroundColor: '#F5F5F5',
@@ -26,4 +26,4 @@ const OpensourceSWPage: React.FC<OpensourceSWPageProps> = () => {
   );
 };
 
-export default OpensourceSWPage; 
+export default MainPage; 

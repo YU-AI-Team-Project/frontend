@@ -1,0 +1,117 @@
+import React, { useState, useEffect } from 'react';
+import { authApi } from '../api';
+import { useNavigate, useLocation } from 'react-router-dom';
+import '../styles/LoginPage.css';
+
+const LoginPage: React.FC = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 이미 로그인되어 있는지 확인
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        const authStatus = await authApi.checkAuth();
+        if (authStatus.isAuthenticated) {
+          // 이미 로그인되어 있으면 메인 페이지로 리디렉션
+          navigate('/', { replace: true });
+        }
+      } catch (error) {
+        // 인증 확인 중 오류가 발생해도, 로그인 페이지에서 처리할 수 있으므로 무시
+      }
+    };
+    
+    checkAuthentication();
+  }, [navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+    setIsLoading(true);
+
+    try {
+      // 로그인 요청
+      const result = await authApi.login({ username, password });
+      
+      // 로그인 성공 메시지 표시
+      setSuccessMessage(result.message || '로그인 성공! 메인 페이지로 이동합니다...');
+      
+      // 인증 상태 확인 (쿠키가 설정되었는지 확인)
+      const authStatus = await authApi.checkAuth();
+      
+      console.log('Authentication status after login:', authStatus);
+      
+      // 잠시 후 메인 페이지로 이동 (사용자에게 성공 메시지를 볼 시간을 주기 위함)
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '로그인에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignupClick = () => {
+    navigate('/signup');
+  };
+
+  return (
+    <div className="login-container">
+      <div className="login-card">
+        <h2 className="login-title">로그인</h2>
+        
+        {error && <div className="error-message">{error}</div>}
+        {successMessage && <div className="success-message">{successMessage}</div>}
+        
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-group">
+            <label htmlFor="username">아이디</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              disabled={isLoading || !!successMessage}
+              placeholder="아이디를 입력하세요"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="password">비밀번호</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading || !!successMessage}
+              placeholder="비밀번호를 입력하세요"
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            className="login-button" 
+            disabled={isLoading || !!successMessage}
+          >
+            {isLoading ? '로그인 중...' : '로그인'}
+          </button>
+        </form>
+        
+        <div className="signup-link">
+          <p>계정이 없으신가요? <button onClick={handleSignupClick}>회원가입</button></p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage; 

@@ -168,8 +168,8 @@ const RightSidebar: React.FC<RightSidebarProps> = () => {
     justifyContent: 'space-between',
   };
 
-  const mainTabs = ['종목정보', '지표분석', '커뮤니티', 'AI예측'];
-  const innerTabs = ['요약', '재무', '이슈', '토론'];
+  const mainTabs = ['종목정보'];
+  const innerTabs = ['요약', '재무', '이슈'];
   const timeframes = ['분기', '연간'];
 
   return (
@@ -185,9 +185,7 @@ const RightSidebar: React.FC<RightSidebarProps> = () => {
       <div style={contentAreaStyle}>
         {activeMainTab === '종목정보' && (
           <>
-            <div style={stockTitleStyle}>가온칩스 코스닥 399720</div>
-            <div style={stockTagStyle}>온디바이스AI</div>
-            <div style={strategyButtonStyle}>수익률 1위 전략 확인 (프리미엄 전략)   매도 &gt;</div>
+            <div style={stockTitleStyle}>가온칩스</div>
             
             <div style={innerTabBarContainerStyle}>
               {innerTabs.map(tab => (
@@ -240,14 +238,8 @@ const RightSidebar: React.FC<RightSidebarProps> = () => {
                 </div>
               </>
             )}
-            {activeInnerTab === '요약' && <p>요약 정보 표시...</p>}
-            {activeInnerTab === '이슈' && <p>이슈 정보 표시...</p>}
-            {activeInnerTab === '토론' && <p>토론 정보 표시...</p>}
           </>
         )}
-        {activeMainTab === '지표분석' && <p>지표분석 내용 표시...</p>}
-        {activeMainTab === '커뮤니티' && <p>커뮤니티 내용 표시...</p>}
-        {activeMainTab === 'AI예측' && <p>AI예측 내용 표시...</p>}
       </div>
     </div>
   );

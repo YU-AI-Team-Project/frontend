@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
 import "./StockSidebar.css";
-import { watchlistApi, isAuthenticated, StockItem, Watchlist, WatchlistSummary } from "../../api";
+import { isAuthenticated, InterestStockInfo } from "../../api";
 
-// Default stock list shown when user is not logged in
-const defaultStockList: StockItem[] = [
+// 기본 종목 목록 정의
+interface StockDisplay {
+  name: string;
+  symbol: string;
+  price: number;
+  change: number;
+  category: "국내종목" | "해외종목" | "가상화폐";
+}
+
+const defaultStockList: StockDisplay[] = [
   { name: "삼성전자", symbol: "005930", price: 54300, change: -2.16, category: "국내종목" },
   { name: "에코프로", symbol: "086520", price: 50200, change: -1.57, category: "국내종목" },
   { name: "알테오젠", symbol: "196170", price: 356500, change: +1.57, category: "국내종목" },
@@ -18,73 +26,76 @@ const categories = ["국내종목", "해외종목", "가상화폐"] as const;
 
 const StockSidebar: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [watchlists, setWatchlists] = useState<WatchlistSummary[]>([]);
-  const [activeWatchlist, setActiveWatchlist] = useState<Watchlist | null>(null);
-  const [stockList, setStockList] = useState<StockItem[]>(defaultStockList);
+  const [userID, setUserID] = useState<string>(""); 
+  const [interestStocks, setInterestStocks] = useState<InterestStockInfo[]>([]);
+  const [stockList, setStockList] = useState<StockDisplay[]>(defaultStockList);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Check if user is logged in
+  // 로그인 상태 확인
   useEffect(() => {
     const checkAuth = async () => {
       const loggedIn = isAuthenticated();
       setIsLoggedIn(loggedIn);
+      
+      if (loggedIn) {
+        setUserID("testuser"); // 테스트용 userID
+      }
     };
     
     checkAuth();
   }, []);
   
-  // Fetch watchlist summaries when logged in
+  // 로그인 시 관심종목 가져오기
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchWatchlists();
+    if (isLoggedIn && userID) {
+      fetchInterestStocks();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, userID]);
   
-  // Fetch watchlist summaries
-  const fetchWatchlists = async () => {
+  // 관심종목 가져오기 (API 구현 전이므로 모의 데이터 사용)
+  const fetchInterestStocks = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const watchlistSummaries = await watchlistApi.getAllWatchlists();
-      setWatchlists(watchlistSummaries);
+      // 실제 API 구현이 되면 아래 코드를 사용하세요
+      // const response = await fetch(`/api/stocks/interests/${userID}`);
+      // const data = await response.json();
+      // const interestStocksList = data.interests || [];
       
-      // Load the first watchlist's details if available
-      if (watchlistSummaries.length > 0) {
-        await loadWatchlist(watchlistSummaries[0].id);
+      // 임시 모의 데이터
+      const interestStocksList: InterestStockInfo[] = [
+        { stock_code: "005930", company_name: "삼성전자" },
+        { stock_code: "035420", company_name: "NAVER" },
+        { stock_code: "035720", company_name: "카카오" }
+      ];
+      
+      setInterestStocks(interestStocksList);
+      
+      // 관심종목 정보를 표시용 형식으로 변환
+      const stockItems: StockDisplay[] = interestStocksList.map(item => ({
+        name: item.company_name,
+        symbol: item.stock_code,
+        price: 0, // 실제 가격 데이터 필요
+        change: 0, // 실제 변동률 데이터 필요
+        category: "국내종목" // 카테고리 정보 필요
+      }));
+      
+      if (stockItems.length > 0) {
+        setStockList(stockItems);
+      } else {
+        setStockList(defaultStockList);
       }
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch watchlists');
-      console.error('Error fetching watchlists:', err);
+      setError(err instanceof Error ? err.message : '관심종목을 불러오는데 실패했습니다');
+      console.error('관심종목 불러오기 오류:', err);
+      setStockList(defaultStockList);
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  // Load a specific watchlist's details
-  const loadWatchlist = async (watchlistId: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const watchlistData = await watchlistApi.getWatchlist(watchlistId);
-      setActiveWatchlist(watchlistData);
-      setStockList(watchlistData.stocks || []);
-      
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load watchlist');
-      console.error('Error loading watchlist:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Handle watchlist change
-  const handleWatchlistChange = async (watchlistId: string) => {
-    await loadWatchlist(watchlistId);
   };
 
   const getChangeClass = (change: number) => {
@@ -93,9 +104,8 @@ const StockSidebar: React.FC = () => {
     return "neutral";
   };
 
-  // Add stock to watchlist
+  // 종목 추가 핸들러
   const handleAddStock = () => {
-    // This would typically open a modal to search and add stocks
     alert('종목추가 기능은 추후 구현될 예정입니다.');
   };
 
@@ -103,21 +113,7 @@ const StockSidebar: React.FC = () => {
     <div className="sidebar">
       <div className="sidebar-header">
         <span className="menu-icon">☰</span>
-        {isLoggedIn && watchlists.length > 0 ? (
-          <select 
-            className="watchlist-selector" 
-            value={activeWatchlist?.id || ''} 
-            onChange={(e) => handleWatchlistChange(e.target.value)}
-          >
-            {watchlists.map(list => (
-              <option key={list.id} value={list.id}>
-                {list.name}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="title">새 관심목록</span>
-        )}
+        <span className="title">관심종목</span>
       </div>
 
       {isLoading ? (
@@ -125,7 +121,7 @@ const StockSidebar: React.FC = () => {
       ) : error ? (
         <div className="error-state">
           <p>데이터를 불러오는 중 오류가 발생했습니다.</p>
-          <button onClick={fetchWatchlists}>재시도</button>
+          <button onClick={fetchInterestStocks}>재시도</button>
         </div>
       ) : (
         <>

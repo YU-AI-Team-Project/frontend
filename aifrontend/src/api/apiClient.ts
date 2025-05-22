@@ -1,5 +1,3 @@
-const API_BASE_URL = 'https://api.example.com';
-
 interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -14,26 +12,16 @@ export enum HttpMethod {
   PATCH = 'PATCH'
 }
 
-export const getAuthToken = (): string | null => {
-  return localStorage.getItem('authToken');
-};
-
+// 백엔드는 토큰 기반이 아닌 쿠키 기반 인증을 사용합니다
 export const isAuthenticated = (): boolean => {
-  return !!getAuthToken();
+  // 백엔드와 직접 확인하는 것이 더 좋지만, 지금은 간단한 쿠키 확인을 사용합니다
+  return document.cookie.includes('username=');
 };
 
 const createHeaders = (includeAuth: boolean = true): Headers => {
   const headers = new Headers({
     'Content-Type': 'application/json',
   });
-
-  if (includeAuth) {
-    const token = getAuthToken();
-    if (token) {
-      headers.append('Authorization', `Bearer ${token}`);
-    }
-  }
-
   return headers;
 };
 
@@ -44,10 +32,12 @@ export async function apiRequest<T>(
   includeAuth: boolean = true
 ): Promise<ApiResponse<T>> {
   try {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // 상대 경로 사용
+    const url = endpoint;
     const options: RequestInit = {
       method,
       headers: createHeaders(includeAuth),
+      credentials: 'include', // 쿠키 기반 인증에 중요합니다
     };
 
     if (data && (method !== HttpMethod.GET)) {
@@ -58,8 +48,7 @@ export async function apiRequest<T>(
     const statusCode = response.status;
 
     if (statusCode === 401) {
-      // Handle authentication error - could redirect to login or clear token
-      localStorage.removeItem('authToken');
+      // 인증 오류 처리 - 로그인 페이지로 리디렉션
       window.location.href = '/login';
       return { statusCode, error: 'Authentication required' };
     }
@@ -74,26 +63,26 @@ export async function apiRequest<T>(
         };
       } else {
         return { 
-          error: responseData.message || 'An error occurred',
+          error: responseData.message || '오류가 발생했습니다',
           statusCode
         };
       }
     } else {
-      // Handle non-JSON response
+      // JSON이 아닌 응답 처리
       const text = await response.text();
       if (statusCode >= 200 && statusCode < 300) {
         return { data: text as unknown as T, statusCode };
       } else {
         return { 
-          error: text || 'An error occurred',
+          error: text || '오류가 발생했습니다',
           statusCode
         };
       }
     }
   } catch (error) {
-    console.error('API request failed:', error);
+    console.error('API 요청 실패:', error);
     return { 
-      error: error instanceof Error ? error.message : 'Network error',
+      error: error instanceof Error ? error.message : '네트워크 오류',
       statusCode: 0
     };
   }

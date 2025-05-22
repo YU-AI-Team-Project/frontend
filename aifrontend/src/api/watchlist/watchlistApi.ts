@@ -1,118 +1,36 @@
 import apiRequest, { HttpMethod } from '../apiClient';
 import { 
-  Watchlist, 
-  WatchlistSummary, 
-  CreateWatchlistRequest, 
-  AddStockToWatchlistRequest 
+  InterestStockResponse, 
+  InterestStockInfo
 } from '../types';
 
 /**
- * Get all watchlists for the current authenticated user
+ * Get all interest stocks for a user
  */
-export const getAllWatchlists = async (): Promise<WatchlistSummary[]> => {
-  const response = await apiRequest<WatchlistSummary[]>('/watchlists');
+export const getInterestStocks = async (userID: string): Promise<InterestStockInfo[]> => {
+  const response = await apiRequest<InterestStockResponse>(`/stocks/interests/${userID}`);
   
   if (response.error) {
     throw new Error(response.error);
   }
   
-  return response.data || [];
+  return response.data?.interests || [];
 };
 
 /**
- * Get a specific watchlist with all its stocks
+ * Add a stock to user's interest stocks
+ * Note: This endpoint is not implemented in the backend yet
  */
-export const getWatchlist = async (watchlistId: string): Promise<Watchlist> => {
-  const response = await apiRequest<Watchlist>(`/watchlists/${watchlistId}`);
-  
-  if (response.error) {
-    throw new Error(response.error);
-  }
-  
-  return response.data as Watchlist;
+export const addInterestStock = async (userID: string, stockCode: string): Promise<void> => {
+  // Endpoint needs to be implemented in the backend
+  throw new Error("This API endpoint is not implemented in the backend yet");
 };
 
 /**
- * Create a new watchlist
+ * Remove a stock from user's interest stocks
+ * Note: This endpoint is not implemented in the backend yet
  */
-export const createWatchlist = async (data: CreateWatchlistRequest): Promise<Watchlist> => {
-  const response = await apiRequest<Watchlist>(
-    '/watchlists', 
-    HttpMethod.POST, 
-    data
-  );
-  
-  if (response.error) {
-    throw new Error(response.error);
-  }
-  
-  return response.data as Watchlist;
-};
-
-/**
- * Update a watchlist's name or description
- */
-export const updateWatchlist = async (
-  watchlistId: string, 
-  data: Partial<CreateWatchlistRequest>
-): Promise<Watchlist> => {
-  const response = await apiRequest<Watchlist>(
-    `/watchlists/${watchlistId}`, 
-    HttpMethod.PUT, 
-    data
-  );
-  
-  if (response.error) {
-    throw new Error(response.error);
-  }
-  
-  return response.data as Watchlist;
-};
-
-/**
- * Delete a watchlist
- */
-export const deleteWatchlist = async (watchlistId: string): Promise<void> => {
-  const response = await apiRequest<void>(
-    `/watchlists/${watchlistId}`, 
-    HttpMethod.DELETE
-  );
-  
-  if (response.error) {
-    throw new Error(response.error);
-  }
-};
-
-/**
- * Add a stock to a watchlist
- */
-export const addStockToWatchlist = async (data: AddStockToWatchlistRequest): Promise<Watchlist> => {
-  const response = await apiRequest<Watchlist>(
-    `/watchlists/${data.watchlistId}/stocks`, 
-    HttpMethod.POST, 
-    { symbol: data.symbol }
-  );
-  
-  if (response.error) {
-    throw new Error(response.error);
-  }
-  
-  return response.data as Watchlist;
-};
-
-/**
- * Remove a stock from a watchlist
- */
-export const removeStockFromWatchlist = async (
-  watchlistId: string, 
-  symbol: string
-): Promise<void> => {
-  const response = await apiRequest<void>(
-    `/watchlists/${watchlistId}/stocks/${symbol}`, 
-    HttpMethod.DELETE
-  );
-  
-  if (response.error) {
-    throw new Error(response.error);
-  }
+export const removeInterestStock = async (userID: string, stockCode: string): Promise<void> => {
+  // Endpoint needs to be implemented in the backend
+  throw new Error("This API endpoint is not implemented in the backend yet");
 }; 

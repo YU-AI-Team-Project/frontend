@@ -1,10 +1,13 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   // Define props if any
 }
 
 const Header: React.FC<HeaderProps> = () => {
+  const navigate = useNavigate();
+
   // Style from Figma: 'Header' (5:4) has fills: fill_YIS6OE ('#FFFFFF')
   const headerStyle: React.CSSProperties = {
     backgroundColor: '#FFFFFF',
@@ -20,6 +23,7 @@ const Header: React.FC<HeaderProps> = () => {
     fontFamily: 'Inter, sans-serif',
     fontWeight: 400,
     fontSize: '18px',
+    cursor: 'pointer',
     // color: '#000000' // fill_I931BD - default black, often not needed to specify
   };
 
@@ -61,17 +65,32 @@ const Header: React.FC<HeaderProps> = () => {
     border: '1px solid #DCDCDC'
   };
 
+  // 로그인 페이지로 이동하는 함수
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
+
+  // 회원가입 페이지로 이동하는 함수
+  const handleSignupClick = () => {
+    navigate('/signup');
+  };
+
+  // 홈으로 이동하는 함수
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
   return (
     <header style={headerStyle}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={logoStyle}>알파스퀘어</div>
+        <div style={logoStyle} onClick={handleLogoClick}>알파스퀘어</div>
       </div>
       <div style={searchBarStyle}>
         <input type="text" placeholder="Q 종목 검색 (Alt + s)" style={searchPlaceholderStyle} />
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={iconStyle}>로그인</div>
-        <div style={iconStyle}>회원가입</div>
+        <div style={iconStyle} onClick={handleLoginClick}>로그인</div>
+        <div style={iconStyle} onClick={handleSignupClick}>회원가입</div>
       </div>
     </header>
   );
