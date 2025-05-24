@@ -101,4 +101,27 @@ export interface InterestStockInfo {
 
 export interface InterestStockResponse {
   interests: InterestStockInfo[];
+}
+
+// 관심종목 추가 요청 타입
+export interface InterestStockAddRequest {
+  userID: string;
+  stock_code: string;
+}
+
+// 관심종목 추가 응답 타입
+export interface InterestStockAddResponse {
+  message: string;
+  interest: InterestStockInfo;
+}
+
+// 관심종목 삭제 요청 타입
+export interface InterestStockRemoveRequest {
+  userID: string;
+  stock_code: string;
+}
+
+// 관심종목 삭제 응답 타입
+export interface InterestStockRemoveResponse {
+  message: string;
 } 

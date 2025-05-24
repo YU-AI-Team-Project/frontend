@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStock } from '../../context/StockContext';
 import { FinancialStatement, StockDetailResponse } from '../../api/types';
+import MarketIndicatorTab from './MarketIndicatorTab';
 
 interface RightSidebarProps {
   // Define props if any
@@ -429,7 +430,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
   };
 
   const mainTabs = ['종목정보'];
-  const innerTabs = ['요약', '재무', '이슈'];
+  const innerTabs = ['요약', '재무', '시장지표', '이슈'];
   const timeframes = ['분기', '연간'];
 
   useEffect(() => {
@@ -840,6 +841,13 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
                   </div>
                 )}
               </>
+            )}
+            
+            {activeInnerTab === '시장지표' && (
+              <MarketIndicatorTab 
+                marketIndicators={displayData?.market_indicators || []}
+                hasRealData={hasRealData}
+              />
             )}
           </>
         )}

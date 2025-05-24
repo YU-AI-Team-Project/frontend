@@ -1,5 +1,12 @@
 import apiRequest, { HttpMethod } from './apiClient';
-import { StockDetailResponse, InterestStockResponse } from './types';
+import { 
+  StockDetailResponse, 
+  InterestStockResponse,
+  InterestStockAddRequest,
+  InterestStockAddResponse,
+  InterestStockRemoveRequest,
+  InterestStockRemoveResponse
+} from './types';
 
 
 const BASE_API_URL = 'http://localhost:8080'; 
@@ -44,6 +51,60 @@ export const getInterestStocks = async (userID: string): Promise<InterestStockRe
   } catch (error) {
     console.error(`사용자 ${userID}의 관심 종목 조회 실패:`, error);
     throw new Error(error instanceof Error ? error.message : '관심 종목 조회 실패');
+  }
+};
+
+/**
+ * 관심종목 추가
+ */
+export const addInterestStock = async (userID: string, stockCode: string): Promise<InterestStockAddResponse> => {
+  try {
+    const requestData: InterestStockAddRequest = {
+      userID,
+      stock_code: stockCode
+    };
+
+    const response = await apiRequest<InterestStockAddResponse>(
+      '/stocks/interests',
+      HttpMethod.POST,
+      requestData
+    );
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    return response.data as InterestStockAddResponse;
+  } catch (error) {
+    console.error(`관심종목 추가 실패 (${stockCode}):`, error);
+    throw new Error(error instanceof Error ? error.message : '관심종목 추가 실패');
+  }
+};
+
+/**
+ * 관심종목 삭제
+ */
+export const removeInterestStock = async (userID: string, stockCode: string): Promise<InterestStockRemoveResponse> => {
+  try {
+    const requestData: InterestStockRemoveRequest = {
+      userID,
+      stock_code: stockCode
+    };
+
+    const response = await apiRequest<InterestStockRemoveResponse>(
+      '/stocks/interests',
+      HttpMethod.DELETE,
+      requestData
+    );
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    return response.data as InterestStockRemoveResponse;
+  } catch (error) {
+    console.error(`관심종목 삭제 실패 (${stockCode}):`, error);
+    throw new Error(error instanceof Error ? error.message : '관심종목 삭제 실패');
   }
 };
 

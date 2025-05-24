@@ -118,28 +118,28 @@ export const logout = async (): Promise<{ message: string }> => {
  */
 export const checkAuth = async (): Promise<{ isAuthenticated: boolean, username?: string }> => {
   try {
-    const response = await fetch('/auth', {
+    const response = await fetch('/auth/check', {
       method: 'GET',
       credentials: 'include', // 쿠키를 포함
     });
 
     console.log('Auth check status:', response.status);
 
+    if (response.status === 401) {
+      return { isAuthenticated: false };
+    }
+
     if (!response.ok) {
       return { isAuthenticated: false };
     }
 
-    const text = await response.text();
-    console.log('Auth check response text:', text);
+    const data = await response.json();
+    console.log('Auth check response data:', data);
     
-    // 응답에 사용자 이름이 포함되어 있으면 인증된 것으로 간주
-    if (text.includes('님 환영합니다')) {
-      // 사용자 이름 추출 (예: "username님 환영합니다" -> "username")
-      const username = text.split('님 환영합니다')[0];
-      return { isAuthenticated: true, username };
-    }
-    
-    return { isAuthenticated: false };
+    return {
+      isAuthenticated: data.isAuthenticated || false,
+      username: data.username
+    };
   } catch (error) {
     console.error('인증 확인 요청 중 오류:', error);
     return { isAuthenticated: false };

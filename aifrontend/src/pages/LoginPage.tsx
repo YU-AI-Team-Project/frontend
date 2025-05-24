@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { authApi } from '../api';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/LoginPage.css';
 
@@ -11,23 +11,15 @@ const LoginPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, login } = useAuth();
 
   // 이미 로그인되어 있는지 확인
   useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const authStatus = await authApi.checkAuth();
-        if (authStatus.isAuthenticated) {
-          // 이미 로그인되어 있으면 메인 페이지로 리디렉션
-          navigate('/', { replace: true });
-        }
-      } catch (error) {
-        // 인증 확인 중 오류가 발생해도, 로그인 페이지에서 처리할 수 있으므로 무시
-      }
-    };
-    
-    checkAuthentication();
-  }, [navigate]);
+    if (isAuthenticated) {
+      // 이미 로그인되어 있으면 메인 페이지로 리디렉션
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,16 +28,13 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // 로그인 요청
-      const result = await authApi.login({ username, password });
+      // AuthContext의 login 함수 사용
+      await login({ username, password });
       
       // 로그인 성공 메시지 표시
-      setSuccessMessage(result.message || '로그인 성공! 메인 페이지로 이동합니다...');
+      setSuccessMessage('로그인 성공! 메인 페이지로 이동합니다...');
       
-      // 인증 상태 확인 (쿠키가 설정되었는지 확인)
-      const authStatus = await authApi.checkAuth();
-      
-      console.log('Authentication status after login:', authStatus);
+      console.log('로그인 성공, 인증 상태 업데이트됨');
       
       // 잠시 후 메인 페이지로 이동 (사용자에게 성공 메시지를 볼 시간을 주기 위함)
       setTimeout(() => {

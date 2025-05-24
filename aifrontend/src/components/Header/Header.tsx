@@ -1,16 +1,18 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { stockApi } from '../../api';
 import { useStock } from '../../context/StockContext';
+import { useAuth } from '../../context/AuthContext';
+import { stockApi } from '../../api';
 
 interface HeaderProps {
-  // Define props if any
+  // Define props if needed
 }
 
 const Header: React.FC<HeaderProps> = () => {
   const navigate = useNavigate();
   const [stockCode, setStockCode] = useState<string>('');
   const { setStockData, isLoading, setIsLoading, error, setError } = useStock();
+  const { isAuthenticated, username, logout } = useAuth();
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Style from Figma: 'Header' (5:4) has fills: fill_YIS6OE ('#FFFFFF')
@@ -94,6 +96,51 @@ const Header: React.FC<HeaderProps> = () => {
     border: '1px solid #DCDCDC'
   };
 
+  // 로그인된 사용자 정보 스타일
+  const userInfoStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    border: '1px solid #2196F3',
+    borderRadius: '20px',
+    padding: '6px 12px',
+    marginLeft: '10px',
+  };
+
+  const userAvatarStyle: React.CSSProperties = {
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    backgroundColor: '#2196F3',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    marginRight: '8px',
+  };
+
+  const userNameStyle: React.CSSProperties = {
+    fontFamily: 'Inter, sans-serif',
+    fontSize: '14px',
+    fontWeight: 500,
+    color: '#1976D2',
+    marginRight: '12px',
+  };
+
+  const logoutButtonStyle: React.CSSProperties = {
+    fontFamily: 'Inter, sans-serif',
+    fontSize: '12px',
+    color: '#666',
+    backgroundColor: '#fff',
+    border: '1px solid #ddd',
+    borderRadius: '12px',
+    padding: '4px 8px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  };
+
   // 로그인 페이지로 이동하는 함수
   const handleLoginClick = () => {
     navigate('/login');
@@ -102,6 +149,16 @@ const Header: React.FC<HeaderProps> = () => {
   // 회원가입 페이지로 이동하는 함수
   const handleSignupClick = () => {
     navigate('/signup');
+  };
+
+  // 로그아웃 함수
+  const handleLogoutClick = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    }
   };
 
   // 홈으로 이동하는 함수
@@ -144,6 +201,12 @@ const Header: React.FC<HeaderProps> = () => {
     }
   };
 
+  // 사용자명의 첫 글자 가져오기 (아바타용)
+  const getUserInitial = (name: string | null) => {
+    if (!name) return 'U';
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <header style={headerStyle}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -170,8 +233,33 @@ const Header: React.FC<HeaderProps> = () => {
         {error && <div style={errorMessageStyle}>{error}</div>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={iconStyle} onClick={handleLoginClick}>로그인</div>
-        <div style={iconStyle} onClick={handleSignupClick}>회원가입</div>
+        {isAuthenticated ? (
+          <div style={userInfoStyle}>
+            <div style={userAvatarStyle}>
+              {getUserInitial(username)}
+            </div>
+            <span style={userNameStyle}>{username}님</span>
+            <button 
+              style={logoutButtonStyle}
+              onClick={handleLogoutClick}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f5f5f5';
+                e.currentTarget.style.borderColor = '#999';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#fff';
+                e.currentTarget.style.borderColor = '#ddd';
+              }}
+            >
+              로그아웃
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={iconStyle} onClick={handleLoginClick}>로그인</div>
+            <div style={iconStyle} onClick={handleSignupClick}>회원가입</div>
+          </>
+        )}
       </div>
     </header>
   );
