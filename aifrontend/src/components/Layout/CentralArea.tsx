@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { stockApi } from '../../api';
+import { stockApi, chatApi } from '../../api';
 import { useStock } from '../../context/StockContext';
+import { useAuth } from '../../context/AuthContext';
+import { RagChatRequest, ChatResponse } from '../../api/types';
 
 interface CentralAreaProps {
   stockCode?: string;
@@ -12,6 +14,7 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  sources?: any[];
 }
 
 const CentralArea: React.FC<CentralAreaProps> = ({ 
@@ -19,6 +22,7 @@ const CentralArea: React.FC<CentralAreaProps> = ({
   companyName: propCompanyName 
 }) => {
   const { stockData } = useStock();
+  const { username, isAuthenticated, isLoading: authLoading } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -28,22 +32,58 @@ const CentralArea: React.FC<CentralAreaProps> = ({
   // StockContext에서 데이터가 있으면 사용하고, 없으면 기본값 사용
   const stockCode = stockData?.stock?.code || propStockCode || 'AAPL';
   const companyName = stockData?.stock?.company_name || propCompanyName || 'Apple Inc.';
+  
+  // username을 userID로 사용 (API 호환성)
+  const userID = username || 'guest';
 
-  // Mock AI 응답 생성
-  const generateMockResponse = (userMessage: string): string => {
-    const responses = [
-      `${companyName}에 대한 질문이군요. 현재 주가 동향을 분석해보겠습니다.`,
-      `${userMessage}에 대해 설명드리겠습니다. ${companyName}은 안정적인 투자처로 평가받고 있습니다.`,
-      `좋은 질문입니다! ${companyName}의 재무 상태는 전반적으로 양호한 편입니다.`,
-      `${companyName}의 향후 전망에 대해 말씀드리면, 기술적 분석 결과 상승 추세를 보이고 있습니다.`,
-      `시장 분석 결과 ${companyName}은 현재 매수 적기로 판단됩니다.`
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+  // 채팅 기록을 Message 형태로 변환하는 함수
+  const convertChatToMessage = (chat: ChatResponse): Message => ({
+    id: chat.id,
+    text: chat.chat,
+    isUser: chat.role === 'user',
+    timestamp: new Date(chat.created_at)
+  });
+
+  // 채팅 기록 불러오기
+  const loadChatHistory = async (): Promise<boolean> => {
+    if (authLoading) {
+      console.log('채팅 기록 로드 스킵: 인증 상태 확인 중');
+      return false;
+    }
+    if (!isAuthenticated || !username) {
+      console.log('채팅 기록 로드 스킵: 인증되지 않음', { isAuthenticated, username });
+      return false;
+    }
+    
+    try {
+      console.log('채팅 기록 로드 시작:', { userID, stockCode });
+      const chats = await chatApi.getChatHistory(userID, stockCode, 100);
+      console.log('불러온 채팅 기록:', chats);
+      const convertedMessages = chats.map(convertChatToMessage);
+      console.log('변환된 메시지:', convertedMessages);
+      setMessages(prev => [...prev, ...convertedMessages]);
+      return convertedMessages.length > 0;
+    } catch (error) {
+      console.error('채팅 기록 로드 실패:', error);
+      return false;
+    }
   };
 
   // 메시지 전송 처리
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
+    
+    // 인증되지 않은 사용자는 채팅할 수 없음
+    if (!isAuthenticated) {
+      const loginMessage: Message = {
+        id: Date.now(),
+        text: '채팅 기능을 사용하려면 로그인이 필요합니다.',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, loginMessage]);
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now(),
@@ -53,20 +93,51 @@ const CentralArea: React.FC<CentralAreaProps> = ({
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
-    // AI 응답 시뮬레이션 (1-2초 지연)
-    setTimeout(() => {
-      const aiResponse: Message = {
+    try {
+      // RAG 채팅 API 호출
+      const ragRequest: RagChatRequest = {
+        userID: userID,
+        stock_code: stockCode,
+        message: currentMessage
+      };
+
+      const ragResponse = await chatApi.chatWithRag(ragRequest);
+
+      if (ragResponse.success) {
+        const aiMessage: Message = {
+          id: Date.now() + 1,
+          text: ragResponse.response,
+          isUser: false,
+          timestamp: new Date(),
+          sources: ragResponse.sources
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        // 에러 메시지 표시
+        const errorMessage: Message = {
+          id: Date.now() + 1,
+          text: ragResponse.error || '응답 생성 중 오류가 발생했습니다.',
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('채팅 API 오류:', error);
+      const errorMessage: Message = {
         id: Date.now() + 1,
-        text: generateMockResponse(inputMessage),
+        text: '죄송합니다. 응답 생성 중 오류가 발생했습니다. 다시 시도해주세요.',
         isUser: false,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, Math.random() * 1000 + 1000);
+    }
   };
 
   // 보고서 로드 함수
@@ -78,7 +149,7 @@ const CentralArea: React.FC<CentralAreaProps> = ({
       const reportResponse = await stockApi.getStockReport(code);
       console.log(reportResponse);
       
-      // 보고서를 채팅 메시지로 표시
+      // 보고서를 채팅 메시지로 표시 (기존 메시지에 추가)
       const reportMessage: Message = {
         id: Date.now(),
         text: reportResponse.report,
@@ -86,19 +157,8 @@ const CentralArea: React.FC<CentralAreaProps> = ({
         timestamp: new Date()
       };
       
-      setMessages([reportMessage]);
+      setMessages(prev => [...prev, reportMessage]);
       setReportLoaded(true);
-      
-      // 보고서 후 안내 메시지
-      setTimeout(() => {
-        const guideMessage: Message = {
-          id: Date.now() + 1,
-          text: `${companyName} (${code}) 보고서를 확인해보세요! 추가로 궁금한 점이 있으시면 언제든 질문해주세요.`,
-          isUser: false,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, guideMessage]);
-      }, 1000);
       
     } catch (error) {
       console.error('보고서 로드 실패:', error);
@@ -108,7 +168,7 @@ const CentralArea: React.FC<CentralAreaProps> = ({
         isUser: false,
         timestamp: new Date()
       };
-      setMessages([errorMessage]);
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -116,15 +176,33 @@ const CentralArea: React.FC<CentralAreaProps> = ({
 
   // 초기 설정 (종목 변경시)
   useEffect(() => {
+    console.log('useEffect 실행:', { stockCode, isAuthenticated, username, authLoading });
+    
+    // 인증 상태가 로딩 중이면 기다림
+    if (authLoading) {
+      console.log('인증 상태 확인 중, 초기화 연기');
+      return;
+    }
+    
     setMessages([]);
     setReportLoaded(false);
     
-    const timer = setTimeout(() => {
-      loadStockReport(stockCode, true);
-    }, 500);
+          const initializeChat = async () => {
+        console.log('initializeChat 시작:', { stockCode, isAuthenticated, username, authLoading });
+        
+        // 먼저 보고서를 로드하고
+        console.log('보고서 로드 시작');
+        await loadStockReport(stockCode, true);
+        
+        // 그 다음 기존 채팅 기록을 불러옴
+        console.log('채팅 기록 로드 시작');
+        await loadChatHistory();
+      };
+    
+    const timer = setTimeout(initializeChat, 500);
 
     return () => clearTimeout(timer);
-  }, [stockCode]);
+  }, [stockCode, isAuthenticated, username, authLoading]);
 
   // 메시지 스크롤
   useEffect(() => {
@@ -136,6 +214,23 @@ const CentralArea: React.FC<CentralAreaProps> = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  // 채팅 기록 삭제 함수
+  const handleClearChat = async () => {
+    if (!isAuthenticated || !username) return;
+    
+    try {
+      await chatApi.deleteChatHistory(userID, stockCode);
+      setMessages([]);
+      setReportLoaded(false);
+      // 보고서 다시 로드
+      setTimeout(() => {
+        loadStockReport(stockCode, true);
+      }, 500);
+    } catch (error) {
+      console.error('채팅 기록 삭제 실패:', error);
     }
   };
 
@@ -297,12 +392,31 @@ const CentralArea: React.FC<CentralAreaProps> = ({
           <span style={stockNameStyle}>{companyName}</span>
           <span style={stockCodeStyle}>{stockCode}</span>
         </div>
-        <div style={{
-          fontSize: '12px',
-          color: '#666',
-          fontFamily: 'Inter, sans-serif'
-        }}>
-          AI 주식 분석 어시스턴트
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {isAuthenticated && (
+            <button
+              onClick={handleClearChat}
+              style={{
+                padding: '6px 12px',
+                backgroundColor: '#dc3545',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            >
+              채팅 기록 삭제
+            </button>
+          )}
+          <div style={{
+            fontSize: '12px',
+            color: '#666',
+            fontFamily: 'Inter, sans-serif'
+          }}>
+            AI 주식 분석 어시스턴트 {username && `(${username})`}
+          </div>
         </div>
       </div>
 
@@ -316,6 +430,31 @@ const CentralArea: React.FC<CentralAreaProps> = ({
                   <div style={messageBubbleStyle(message.isUser, isReport)}>
                     {message.text}
                   </div>
+                  {message.sources && message.sources.length > 0 && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      color: '#666',
+                      maxWidth: '70%'
+                    }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                        참고 자료 ({message.sources.length}개)
+                      </div>
+                      {message.sources.slice(0, 3).map((source: any, index: number) => (
+                        <div key={index} style={{ marginBottom: '2px' }}>
+                          • {source.title || (source.content && source.content.substring(0, 50) + '...') || '관련 뉴스'}
+                          {source.relevance_score && (
+                            <span style={{ color: '#28a745', marginLeft: '4px' }}>
+                              ({Math.round(source.relevance_score * 100)}% 관련)
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div style={{
                     ...timestampStyle,
                     textAlign: message.isUser ? 'right' : 'left'
@@ -339,21 +478,30 @@ const CentralArea: React.FC<CentralAreaProps> = ({
 
         <div style={inputAreaStyle}>
           <textarea
-            style={inputStyle}
+            style={{
+              ...inputStyle,
+              backgroundColor: isAuthenticated ? '#FFFFFF' : '#f8f9fa',
+              color: isAuthenticated ? '#333' : '#6c757d'
+            }}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={`${companyName} 주식에 대해 궁금한 점을 질문해보세요...`}
+            placeholder={
+              isAuthenticated 
+                ? `${companyName} 주식에 대해 궁금한 점을 질문해보세요...`
+                : '로그인 후 AI 채팅을 이용할 수 있습니다.'
+            }
             rows={1}
+            disabled={!isAuthenticated}
           />
           <button
             style={{
               ...sendButtonStyle,
-              opacity: inputMessage.trim() ? 1 : 0.5,
-              cursor: inputMessage.trim() ? 'pointer' : 'not-allowed'
+              opacity: (inputMessage.trim() && isAuthenticated) ? 1 : 0.5,
+              cursor: (inputMessage.trim() && isAuthenticated) ? 'pointer' : 'not-allowed'
             }}
             onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isLoading}
+            disabled={!inputMessage.trim() || isLoading || !isAuthenticated}
           >
             전송
           </button>

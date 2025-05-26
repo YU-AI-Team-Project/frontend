@@ -97,6 +97,12 @@ export interface StockDetailResponse {
 export interface InterestStockInfo {
   stock_code: string;
   company_name: string;
+  current_price?: number;
+  previous_close?: number;
+  day_change?: number;
+  day_change_percent?: number;
+  volume?: number;
+  market_cap?: number;
 }
 
 export interface InterestStockResponse {
@@ -134,4 +140,34 @@ export interface StockReportResponse {
   created_at: string;
   is_new: boolean;
   success: boolean;
+}
+
+// 채팅 관련 타입 정의 (백엔드와 정확히 일치)
+export interface RagChatRequest {
+  userID: string;
+  stock_code?: string;
+  message: string;
+}
+
+export interface RagChatResponse {
+  user_query: string;
+  response: string;
+  sources: any[];
+  source_count: number;
+  success: boolean;
+  error?: string;
+}
+
+export interface ChatRequest {
+  userID: string;
+  stock_code: string;
+  role: string;
+  chat: string;
+}
+
+export interface ChatResponse {
+  id: number;
+  role: string;
+  chat: string;
+  created_at: string;
 } 

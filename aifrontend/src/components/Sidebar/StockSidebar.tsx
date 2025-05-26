@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./StockSidebar.css";
 import { useAuth } from "../../context/AuthContext";
-import { watchlistApi, InterestStockInfo, stockApi, StockDetailResponse } from "../../api";
+import { watchlistApi, InterestStockInfo } from "../../api";
 
 // 기본 종목 목록 정의 (관심종목이 없을 때 표시용)
 interface StockDisplay {
@@ -11,28 +11,6 @@ interface StockDisplay {
   change: number;
   isInterest?: boolean; // 관심종목 여부 추가
 }
-
-// 주식 상세 정보를 StockDisplay 형식으로 변환하는 함수
-const convertToStockDisplay = (detail: StockDetailResponse, isInterest: boolean = true): StockDisplay => {
-  // 최신 시장 지표 가져오기
-  const latestIndicator = detail.market_indicators && detail.market_indicators.length > 0 
-    ? detail.market_indicators[detail.market_indicators.length - 1] 
-    : null;
-
-  // 가격 변화율 계산 (현재가 vs 전일종가)
-  let change = 0;
-  if (latestIndicator && latestIndicator.current_price && latestIndicator.previous_close) {
-    change = ((latestIndicator.current_price - latestIndicator.previous_close) / latestIndicator.previous_close) * 100;
-  }
-
-  return {
-    name: detail.stock.company_name,
-    symbol: detail.stock.code,
-    price: latestIndicator?.current_price || latestIndicator?.close_price || 0,
-    change: Number(change.toFixed(2)),
-    isInterest
-  };
-};
 
 const StockSidebar: React.FC = () => {
   const { isAuthenticated, username } = useAuth(); // AuthContext 사용
@@ -58,7 +36,7 @@ const StockSidebar: React.FC = () => {
     }
   }, [isAuthenticated, username]);
   
-  // 관심종목 가져오기 및 상세 정보 로드
+  // 관심종목 가져오기 (백엔드에서 가격 정보 포함하여 반환)
   const fetchInterestStocks = async () => {
     if (!username) return;
     
@@ -66,7 +44,7 @@ const StockSidebar: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      // 1. 관심종목 목록 가져오기
+      // 관심종목 목록 가져오기 (가격 정보 포함)
       const interestStocksList = await watchlistApi.getInterestStocks(username);
       setInterestStocks(interestStocksList);
       
@@ -75,26 +53,14 @@ const StockSidebar: React.FC = () => {
         return;
       }
       
-      // 2. 각 관심종목의 상세 정보 가져오기
-      const stockDetails: StockDisplay[] = [];
-      
-      for (const interestStock of interestStocksList) {
-        try {
-          const detail = await stockApi.getStockDetail(interestStock.stock_code);
-          const stockDisplay = convertToStockDisplay(detail, true);
-          stockDetails.push(stockDisplay);
-        } catch (err) {
-          console.error(`${interestStock.stock_code} 상세 정보 로드 실패:`, err);
-          // 상세 정보를 가져올 수 없는 경우 기본 정보로 표시
-          stockDetails.push({
-            name: interestStock.company_name,
-            symbol: interestStock.stock_code,
-            price: 0,
-            change: 0,
-            isInterest: true
-          });
-        }
-      }
+      // 백엔드에서 받은 가격 정보를 바로 사용
+      const stockDetails: StockDisplay[] = interestStocksList.map(interestStock => ({
+        name: interestStock.company_name,
+        symbol: interestStock.stock_code,
+        price: interestStock.current_price || 0,
+        change: interestStock.day_change_percent || 0,
+        isInterest: true
+      }));
       
       setStockList(stockDetails);
       

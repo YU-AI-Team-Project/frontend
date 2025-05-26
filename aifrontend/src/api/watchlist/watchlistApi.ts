@@ -9,7 +9,7 @@ import {
 } from '../types';
 
 /**
- * Get all interest stocks for a user
+ * 사용자의 관심종목 목록 조회
  */
 export const getInterestStocks = async (userID: string): Promise<InterestStockInfo[]> => {
   const response = await apiRequest<InterestStockResponse>(`/stocks/interests/${userID}`);
@@ -22,7 +22,7 @@ export const getInterestStocks = async (userID: string): Promise<InterestStockIn
 };
 
 /**
- * Add a stock to user's interest stocks
+ * 사용자의 관심종목에 종목 추가
  */
 export const addInterestStock = async (userID: string, stockCode: string): Promise<InterestStockAddResponse> => {
   const requestData: InterestStockAddRequest = {
@@ -48,7 +48,7 @@ export const addInterestStock = async (userID: string, stockCode: string): Promi
 };
 
 /**
- * Remove a stock from user's interest stocks
+ * 사용자의 관심종목에서 종목 삭제
  */
 export const removeInterestStock = async (userID: string, stockCode: string): Promise<InterestStockRemoveResponse> => {
   const requestData: InterestStockRemoveRequest = {
