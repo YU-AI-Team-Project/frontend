@@ -49,7 +49,7 @@ export async function apiRequest<T>(
 
     if (statusCode === 401) {
       // 인증 오류 처리 - 로그인 페이지로 리디렉션
-      window.location.href = '/login';
+      window.location.href = '/auth/login';
       return { statusCode, error: 'Authentication required' };
     }
 

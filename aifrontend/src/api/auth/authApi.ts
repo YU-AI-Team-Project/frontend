@@ -20,7 +20,7 @@ export const login = async (credentials: LoginCredentials): Promise<{ message: s
     formData.append('username', credentials.username);
     formData.append('password', credentials.password);
 
-    const response = await fetch('/login', {
+    const response = await fetch('/auth/login', {
       method: 'POST',
       body: formData,
       credentials: 'include', // 쿠키 기반 인증에 중요
@@ -65,7 +65,7 @@ export const signup = async (userData: SignupCredentials): Promise<{ message: st
   formData.append('password', userData.password);
 
   try {
-    const response = await fetch('/signup', {
+    const response = await fetch('/auth/signup', {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -94,7 +94,7 @@ export const signup = async (userData: SignupCredentials): Promise<{ message: st
  */
 export const logout = async (): Promise<{ message: string }> => {
   try {
-    const response = await fetch('/logout', {
+    const response = await fetch('/auth/logout', {
       method: 'GET',
       credentials: 'include',
     });
@@ -118,28 +118,28 @@ export const logout = async (): Promise<{ message: string }> => {
  */
 export const checkAuth = async (): Promise<{ isAuthenticated: boolean, username?: string }> => {
   try {
-    const response = await fetch('/', {
+    const response = await fetch('/auth/check', {
       method: 'GET',
       credentials: 'include', // 쿠키를 포함
     });
 
     console.log('Auth check status:', response.status);
 
+    if (response.status === 401) {
+      return { isAuthenticated: false };
+    }
+
     if (!response.ok) {
       return { isAuthenticated: false };
     }
 
-    const text = await response.text();
-    console.log('Auth check response text:', text);
+    const data = await response.json();
+    console.log('Auth check response data:', data);
     
-    // 응답에 사용자 이름이 포함되어 있으면 인증된 것으로 간주
-    if (text.includes('님 환영합니다')) {
-      // 사용자 이름 추출 (예: "username님 환영합니다" -> "username")
-      const username = text.split('님 환영합니다')[0];
-      return { isAuthenticated: true, username };
-    }
-    
-    return { isAuthenticated: false };
+    return {
+      isAuthenticated: data.isAuthenticated || false,
+      username: data.username
+    };
   } catch (error) {
     console.error('인증 확인 요청 중 오류:', error);
     return { isAuthenticated: false };

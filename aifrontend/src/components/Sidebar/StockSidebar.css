@@ -17,6 +17,17 @@
   margin-right: 8px;
 }
 
+.title {
+  flex: 1;
+}
+
+.user-info {
+  font-size: 12px;
+  color: #666;
+  font-weight: normal;
+  margin-left: 8px;
+}
+
 .watchlist-selector {
   flex: 1;
   padding: 4px;
@@ -24,6 +35,27 @@
   border-radius: 4px;
   background-color: #fafafa;
   font-size: 14px;
+}
+
+/* 메시지 스타일 */
+.message {
+  padding: 8px;
+  margin: 8px 0;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 
 .loading-state {
@@ -66,6 +98,87 @@
   font-size: 14px;
   cursor: pointer;
   margin-bottom: 12px;
+  border-radius: 4px;
+}
+
+.add-btn:disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* 종목 추가 폼 스타일 */
+.add-stock-form {
+  margin-bottom: 12px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.add-stock-form input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.form-buttons button {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.form-buttons button:first-child {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.form-buttons button:first-child:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.form-buttons button:last-child {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* 로그인 안내 */
+.login-notice {
+  padding: 8px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+/* 빈 관심종목 안내 */
+.empty-notice {
+  padding: 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  color: #6c757d;
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 12px;
+  line-height: 1.4;
 }
 
 .category-title {
@@ -77,13 +190,20 @@
 }
 
 .stock-item {
+  display: flex;
+  align-items: center;
   padding: 6px 4px;
   border-radius: 4px;
-  cursor: pointer;
+  position: relative;
 }
 
 .stock-item.selected {
   background-color: #eef5ff;
+}
+
+.stock-content {
+  flex: 1;
+  cursor: pointer;
 }
 
 .stock-header {
@@ -94,6 +214,31 @@
 .stock-sub {
   font-size: 12px;
   color: #777;
+}
+
+/* 관심종목 버튼 스타일 */
+.interest-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px;
+  margin-left: 8px;
+  color: #ccc;
+  transition: color 0.2s;
+}
+
+.interest-btn:hover {
+  color: #ffc107;
+}
+
+.interest-btn.active {
+  color: #ffc107;
+}
+
+.interest-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .positive {

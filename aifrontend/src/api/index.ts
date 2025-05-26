@@ -11,4 +11,7 @@ export * as watchlistApi from './watchlist/watchlistApi';
 // 주식 정보 API
 export * as stockApi from './stockApi';
 
+// 채팅 API
+export * as chatApi from './chatApi';
+
 // 애플리케이션이 성장함에 따라 여기에 더 많은 API 모듈을 추가할 수 있습니다 

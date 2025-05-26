@@ -1,5 +1,16 @@
 import apiRequest, { HttpMethod } from './apiClient';
-import { StockDetailResponse, InterestStockResponse } from './types';
+import { 
+  StockDetailResponse, 
+  InterestStockResponse,
+  InterestStockAddRequest,
+  InterestStockAddResponse,
+  InterestStockRemoveRequest,
+  InterestStockRemoveResponse,
+  StockReportResponse
+} from './types';
+
+
+const BASE_API_URL = 'http://localhost:8080'; 
 
 /**
  * 특정 종목 코드로 주식 상세 정보 조회
@@ -14,6 +25,7 @@ export const getStockDetail = async (stockCode: string): Promise<StockDetailResp
     if (response.error) {
       throw new Error(response.error);
     }
+    console.log(response.data);
 
     return response.data as StockDetailResponse;
   } catch (error) {
@@ -41,4 +53,86 @@ export const getInterestStocks = async (userID: string): Promise<InterestStockRe
     console.error(`사용자 ${userID}의 관심 종목 조회 실패:`, error);
     throw new Error(error instanceof Error ? error.message : '관심 종목 조회 실패');
   }
-}; 
+};
+
+/**
+ * 관심종목 추가
+ */
+export const addInterestStock = async (userID: string, stockCode: string): Promise<InterestStockAddResponse> => {
+  try {
+    const requestData: InterestStockAddRequest = {
+      userID,
+      stock_code: stockCode
+    };
+
+    const response = await apiRequest<InterestStockAddResponse>(
+      '/stocks/interests',
+      HttpMethod.POST,
+      requestData
+    );
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    return response.data as InterestStockAddResponse;
+  } catch (error) {
+    console.error(`관심종목 추가 실패 (${stockCode}):`, error);
+    throw new Error(error instanceof Error ? error.message : '관심종목 추가 실패');
+  }
+};
+
+/**
+ * 관심종목 삭제
+ */
+export const removeInterestStock = async (userID: string, stockCode: string): Promise<InterestStockRemoveResponse> => {
+  try {
+    const requestData: InterestStockRemoveRequest = {
+      userID,
+      stock_code: stockCode
+    };
+
+    const response = await apiRequest<InterestStockRemoveResponse>(
+      '/stocks/interests',
+      HttpMethod.DELETE,
+      requestData
+    );
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    return response.data as InterestStockRemoveResponse;
+  } catch (error) {
+    console.error(`관심종목 삭제 실패 (${stockCode}):`, error);
+    throw new Error(error instanceof Error ? error.message : '관심종목 삭제 실패');
+  }
+};
+
+// 종목 검색 결과 타입 정의
+export interface StockSearchResult {
+  code: string;
+  company_name: string;
+}
+
+/**
+ * 종목 보고서 조회/생성
+ */
+export const getStockReport = async (stockCode: string): Promise<StockReportResponse> => {
+  try {
+    const response = await apiRequest<StockReportResponse>(
+      `/reports/report/${stockCode}`,
+      HttpMethod.GET
+    );
+    console.log(response.data);
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    return response.data as StockReportResponse;
+  } catch (error) {
+    console.error(`종목 보고서 조회 실패 (${stockCode}):`, error);
+    throw new Error(error instanceof Error ? error.message : '종목 보고서 조회 실패');
+  }
+};
