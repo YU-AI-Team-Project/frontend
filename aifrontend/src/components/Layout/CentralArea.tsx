@@ -1,46 +1,54 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { stockApi } from '../../api';
+import { useStock } from '../../context/StockContext';
+
+interface CentralAreaProps {
+  stockCode?: string;
+  companyName?: string;
+}
 
 interface Message {
-  id: string;
-  type: 'user' | 'ai';
-  content: string;
+  id: number;
+  text: string;
+  isUser: boolean;
   timestamp: Date;
 }
 
-interface CentralAreaProps {
-  // Define props if any
-}
-
-const CentralArea: React.FC<CentralAreaProps> = () => {
+const CentralArea: React.FC<CentralAreaProps> = ({ 
+  stockCode: propStockCode, 
+  companyName: propCompanyName 
+}) => {
+  const { stockData } = useStock();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [reportLoaded, setReportLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mock 데이터 - 주식 관련 대화 시뮬레이션
-  const mockResponses = [
-    "Apple Inc. (AAPL)의 최근 재무 성과를 보면, 2024년 Q4 매출이 전년 동기 대비 6.5% 증가한 124.3조원을 기록했습니다. 특히 iPhone 매출이 견조한 성장을 보였고, 서비스 부문도 지속적인 확장을 나타내고 있습니다.",
-    "현재 Apple의 PER은 28.5배로 기술주 평균보다 다소 높은 수준이지만, 강력한 브랜드 파워와 안정적인 현금흐름을 고려할 때 합리적인 수준으로 평가됩니다.",
-    "Apple의 주요 리스크 요인으로는 중국 시장에서의 경쟁 심화, 스마트폰 시장 포화, 그리고 공급망 이슈가 있습니다. 하지만 AI와 웨어러블 기기 분야에서의 혁신이 새로운 성장 동력이 될 것으로 전망됩니다.",
-    "기술적 분석 관점에서 Apple 주가는 현재 상승 추세선을 유지하고 있으며, RSI 지표는 중립 구간에 위치해 있습니다. 200일 이동평균선 위에서 거래되고 있어 장기적 상승 모멘텀이 유지되고 있는 상황입니다.",
-    "Apple의 배당 정책을 보면, 현재 배당수익률은 0.44%로 높지 않지만 꾸준히 배당을 증가시켜왔습니다. 또한 적극적인 자사주 매입을 통해 주주가치 제고에 노력하고 있습니다."
-  ];
+  // StockContext에서 데이터가 있으면 사용하고, 없으면 기본값 사용
+  const stockCode = stockData?.stock?.code || propStockCode || 'AAPL';
+  const companyName = stockData?.stock?.company_name || propCompanyName || 'Apple Inc.';
 
   // Mock AI 응답 생성
   const generateMockResponse = (userMessage: string): string => {
-    const responses = mockResponses;
-    const randomIndex = Math.floor(Math.random() * responses.length);
-    return responses[randomIndex];
+    const responses = [
+      `${companyName}에 대한 질문이군요. 현재 주가 동향을 분석해보겠습니다.`,
+      `${userMessage}에 대해 설명드리겠습니다. ${companyName}은 안정적인 투자처로 평가받고 있습니다.`,
+      `좋은 질문입니다! ${companyName}의 재무 상태는 전반적으로 양호한 편입니다.`,
+      `${companyName}의 향후 전망에 대해 말씀드리면, 기술적 분석 결과 상승 추세를 보이고 있습니다.`,
+      `시장 분석 결과 ${companyName}은 현재 매수 적기로 판단됩니다.`
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
   };
 
   // 메시지 전송 처리
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputMessage,
+      id: Date.now(),
+      text: inputMessage,
+      isUser: true,
       timestamp: new Date()
     };
 
@@ -48,29 +56,75 @@ const CentralArea: React.FC<CentralAreaProps> = () => {
     setInputMessage('');
     setIsLoading(true);
 
-    // Mock AI 응답 시뮬레이션 (1-2초 지연)
+    // AI 응답 시뮬레이션 (1-2초 지연)
     setTimeout(() => {
       const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: generateMockResponse(inputMessage),
+        id: Date.now() + 1,
+        text: generateMockResponse(inputMessage),
+        isUser: false,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiResponse]);
       setIsLoading(false);
-    }, 1000 + Math.random() * 1000);
+    }, Math.random() * 1000 + 1000);
   };
 
-  // 초기 메시지 설정
+  // 보고서 로드 함수
+  const loadStockReport = async (code: string, forceReload: boolean = false) => {
+    if (reportLoaded && !forceReload) return;
+    
+    setIsLoading(true);
+    try {
+      const reportResponse = await stockApi.getStockReport(code);
+      console.log(reportResponse);
+      
+      // 보고서를 채팅 메시지로 표시
+      const reportMessage: Message = {
+        id: Date.now(),
+        text: reportResponse.report,
+        isUser: false,
+        timestamp: new Date()
+      };
+      
+      setMessages([reportMessage]);
+      setReportLoaded(true);
+      
+      // 보고서 후 안내 메시지
+      setTimeout(() => {
+        const guideMessage: Message = {
+          id: Date.now() + 1,
+          text: `${companyName} (${code}) 보고서를 확인해보세요! 추가로 궁금한 점이 있으시면 언제든 질문해주세요.`,
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, guideMessage]);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('보고서 로드 실패:', error);
+      const errorMessage: Message = {
+        id: Date.now(),
+        text: `${companyName} (${code}) 보고서를 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages([errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 초기 설정 (종목 변경시)
   useEffect(() => {
-    const initialMessage: Message = {
-      id: 'initial',
-      type: 'ai',
-      content: '안녕하세요! 저는 AI 주식 분석 어시스턴트입니다. Apple Inc. (AAPL)에 대해 궁금한 점이 있으시면 언제든 질문해주세요. 재무분석, 기술적 분석, 시장 전망 등 다양한 정보를 제공할 수 있습니다.',
-      timestamp: new Date()
-    };
-    setMessages([initialMessage]);
-  }, []);
+    setMessages([]);
+    setReportLoaded(false);
+    
+    const timer = setTimeout(() => {
+      loadStockReport(stockCode, true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [stockCode]);
 
   // 메시지 스크롤
   useEffect(() => {
@@ -154,16 +208,18 @@ const CentralArea: React.FC<CentralAreaProps> = () => {
     justifyContent: isUser ? 'flex-end' : 'flex-start',
   });
 
-  const messageBubbleStyle = (isUser: boolean): React.CSSProperties => ({
-    maxWidth: '70%',
-    padding: '12px 16px',
+  const messageBubbleStyle = (isUser: boolean, isReport: boolean = false): React.CSSProperties => ({
+    maxWidth: isReport ? '90%' : '70%',
+    padding: isReport ? '16px 20px' : '12px 16px',
     borderRadius: '18px',
-    backgroundColor: isUser ? '#007bff' : '#f1f3f5',
+    backgroundColor: isUser ? '#007bff' : (isReport ? '#f8f9fa' : '#f1f3f5'),
     color: isUser ? '#FFFFFF' : '#333333',
     fontFamily: 'Inter, sans-serif',
-    fontSize: '14px',
-    lineHeight: '1.4',
+    fontSize: isReport ? '13px' : '14px',
+    lineHeight: isReport ? '1.6' : '1.4',
     wordBreak: 'break-word',
+    whiteSpace: 'pre-wrap',
+    border: isReport ? '1px solid #e9ecef' : 'none',
   });
 
   const inputAreaStyle: React.CSSProperties = {
@@ -238,8 +294,8 @@ const CentralArea: React.FC<CentralAreaProps> = () => {
     <div style={areaStyle}>
       <div style={headerStyle}>
         <div style={stockInfoStyle}>
-          <span style={stockNameStyle}>Apple Inc.</span>
-          <span style={stockCodeStyle}>AAPL</span>
+          <span style={stockNameStyle}>{companyName}</span>
+          <span style={stockCodeStyle}>{stockCode}</span>
         </div>
         <div style={{
           fontSize: '12px',
@@ -252,21 +308,24 @@ const CentralArea: React.FC<CentralAreaProps> = () => {
 
       <div style={chatContainerStyle}>
         <div style={messagesAreaStyle}>
-          {messages.map((message) => (
-            <div key={message.id} style={messageStyle(message.type === 'user')}>
-              <div>
-                <div style={messageBubbleStyle(message.type === 'user')}>
-                  {message.content}
-                </div>
-                <div style={{
-                  ...timestampStyle,
-                  textAlign: message.type === 'user' ? 'right' : 'left'
-                }}>
-                  {formatTime(message.timestamp)}
+          {messages.map((message) => {
+            const isReport = message.text.length > 1000; // 긴 메시지는 보고서로 간주
+            return (
+              <div key={message.id} style={messageStyle(message.isUser)}>
+                <div>
+                  <div style={messageBubbleStyle(message.isUser, isReport)}>
+                    {message.text}
+                  </div>
+                  <div style={{
+                    ...timestampStyle,
+                    textAlign: message.isUser ? 'right' : 'left'
+                  }}>
+                    {formatTime(message.timestamp)}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           
           {isLoading && (
             <div style={loadingStyle}>
@@ -284,7 +343,7 @@ const CentralArea: React.FC<CentralAreaProps> = () => {
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Apple 주식에 대해 궁금한 점을 질문해보세요..."
+            placeholder={`${companyName} 주식에 대해 궁금한 점을 질문해보세요...`}
             rows={1}
           />
           <button

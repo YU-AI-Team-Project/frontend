@@ -436,7 +436,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
   useEffect(() => {
     // 재무제표 데이터가 있는지 디버깅
     if (displayData?.financial_statements) {
-      console.log('재무제표 데이터 (실제:', hasRealData, '):', displayData.financial_statements);
+      //console.log('재무제표 데이터 (실제:', hasRealData, '):', displayData.financial_statements);
     }
   }, [displayData, hasRealData]);
 
@@ -449,7 +449,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
       )
     : [];
 
-  console.log('필터링된 재무제표:', filteredFinancials);
+  //console.log('필터링된 재무제표:', filteredFinancials);
 
   // 날짜/기간 정렬
   const sortedFinancials = [...filteredFinancials].sort((a: FinancialStatement, b: FinancialStatement) => {
@@ -459,7 +459,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
     return 0;
   }).slice(0, 4); // 최대 4개만 표시
 
-  console.log('정렬된 재무제표:', sortedFinancials);
+  //console.log('정렬된 재무제표:', sortedFinancials);
 
   // 날짜 포맷 함수
   const formatDate = (dateString: string) => {

@@ -5,7 +5,8 @@ import {
   InterestStockAddRequest,
   InterestStockAddResponse,
   InterestStockRemoveRequest,
-  InterestStockRemoveResponse
+  InterestStockRemoveResponse,
+  StockReportResponse
 } from './types';
 
 
@@ -113,3 +114,25 @@ export interface StockSearchResult {
   code: string;
   company_name: string;
 }
+
+/**
+ * 종목 보고서 조회/생성
+ */
+export const getStockReport = async (stockCode: string): Promise<StockReportResponse> => {
+  try {
+    const response = await apiRequest<StockReportResponse>(
+      `/reports/report/${stockCode}`,
+      HttpMethod.GET
+    );
+    console.log(response.data);
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    return response.data as StockReportResponse;
+  } catch (error) {
+    console.error(`종목 보고서 조회 실패 (${stockCode}):`, error);
+    throw new Error(error instanceof Error ? error.message : '종목 보고서 조회 실패');
+  }
+};

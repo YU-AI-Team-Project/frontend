@@ -124,4 +124,14 @@ export interface InterestStockRemoveRequest {
 // 관심종목 삭제 응답 타입
 export interface InterestStockRemoveResponse {
   message: string;
+}
+
+// 보고서 관련 타입 정의
+export interface StockReportResponse {
+  stock_code: string;
+  company_name: string;
+  report: string;
+  created_at: string;
+  is_new: boolean;
+  success: boolean;
 } 
