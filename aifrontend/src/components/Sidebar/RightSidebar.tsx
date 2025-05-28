@@ -262,7 +262,9 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
   const sidebarStyle: React.CSSProperties = {
     backgroundColor: '#F7F7F7',
     padding: '15px',
-    width: '320px', // Approximate width, can be adjusted
+    width: '320px', // Fixed width
+    minWidth: '320px', // Ensure minimum width
+    maxWidth: '320px', // Ensure maximum width
     display: isOpen || !!displayData ? 'flex' : 'none',
     flexDirection: 'column',
     borderLeft: '1px solid #E0E0E0',
@@ -569,20 +571,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
       </div>
 
       <div style={contentAreaStyle}>
-        {!hasRealData && (
-          <div style={{
-            backgroundColor: '#fff3cd',
-            border: '1px solid #ffeaa7',
-            borderRadius: '4px',
-            padding: '8px',
-            marginBottom: '10px',
-            fontSize: '12px',
-            color: '#856404'
-          }}>
-            📊 테스트용 Mock 데이터입니다
-          </div>
-        )}
-        
         {activeMainTab === '종목정보' && (
           <>
             <div style={stockTitleStyle}>{displayData.stock.company_name}</div>
