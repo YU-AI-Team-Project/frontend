@@ -9,7 +9,7 @@ interface RightSidebarProps {
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
-  const { stockData, isLoading, error } = useStock();
+  const { stockData, isLoading, error, newsData } = useStock();
   const [activeMainTab, setActiveMainTab] = useState('종목정보');
   const [activeInnerTab, setActiveInnerTab] = useState('재무');
   const [activeTimeframe, setActiveTimeframe] = useState('연간');
@@ -262,9 +262,9 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
   const sidebarStyle: React.CSSProperties = {
     backgroundColor: '#F7F7F7',
     padding: '15px',
-    width: '320px', // Fixed width
-    minWidth: '320px', // Ensure minimum width
-    maxWidth: '320px', // Ensure maximum width
+    width: '360px', // Fixed width
+    minWidth: '360px', // Ensure minimum width
+    maxWidth: '360px', // Ensure maximum width
     display: isOpen || !!displayData ? 'flex' : 'none',
     flexDirection: 'column',
     borderLeft: '1px solid #E0E0E0',
@@ -296,9 +296,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
     backgroundColor: '#FFFFFF',
     padding: '15px',
     borderRadius: '4px',
-    flexGrow: 1,
+    height: 'calc(100vh - 120px)', // 고정 높이 설정
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'hidden', // 전체 영역은 스크롤 없음
   };
 
   // Style from Figma: 'RSB Stock Title' (5:60) textStyle: style_32ZW5Y
@@ -432,7 +433,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
   };
 
   const mainTabs = ['종목정보'];
-  const innerTabs = ['요약', '재무', '시장지표', '이슈'];
+  const innerTabs = ['재무', '시장지표', '관련뉴스'];
   const timeframes = ['분기', '연간'];
 
   useEffect(() => {
@@ -585,7 +586,11 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
             </div>
 
             {activeInnerTab === '재무' && (
-              <>
+              <div style={{
+                height: '100%',
+                overflow: 'auto',
+                paddingRight: '5px'
+              }}>
                 <div style={timeFrameButtonsContainerStyle}>
                   {timeframes.map(tf => (
                     <button key={tf} style={getTimeFrameButtonStyle(activeTimeframe === tf)} onClick={() => setActiveTimeframe(tf)}>
@@ -828,7 +833,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
                     재무 데이터가 없습니다.
                   </div>
                 )}
-              </>
+              </div>
             )}
             
             {activeInnerTab === '시장지표' && (
@@ -836,6 +841,96 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ isOpen = false }) => {
                 marketIndicators={displayData?.market_indicators || []}
                 hasRealData={hasRealData}
               />
+            )}
+
+            {activeInnerTab === '관련뉴스' && (
+              <div style={{
+                height: '100%', 
+                overflow: 'auto',
+                paddingRight: '5px' // 스크롤바 공간
+              }}>
+                {newsData.length > 0 ? (
+                  <>
+                    <div style={{
+                      marginBottom: '15px', 
+                      fontSize: '14px', 
+                      color: '#666',
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: '#FFFFFF',
+                      paddingBottom: '10px',
+                      borderBottom: '1px solid #EEEEEE'
+                    }}>
+                      총 {newsData.length}개의 관련 뉴스
+                    </div>
+                    {newsData.map((news: any, index: number) => (
+                      <div key={news.id || index} style={{
+                        backgroundColor: '#FAFAFA',
+                        padding: '12px',
+                        marginBottom: '10px',
+                        borderRadius: '6px',
+                        border: '1px solid #EEEEEE'
+                      }}>
+                        <div style={{
+                          fontWeight: 600,
+                          fontSize: '13px',
+                          color: '#333',
+                          marginBottom: '6px',
+                          lineHeight: '1.4',
+                          cursor: 'pointer'
+                        }}>
+                          {news.title}
+                        </div>
+                        <div style={{
+                          fontSize: '11px',
+                          color: '#888',
+                          marginBottom: '8px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <span>{news.published_at || '날짜 미상'}</span>
+                          {news.similarity && (
+                            <span style={{
+                              backgroundColor: '#E3F2FD',
+                              color: '#1976D2',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontSize: '10px'
+                            }}>
+                              관련도: {(news.similarity * 100).toFixed(1)}%
+                            </span>
+                          )}
+                        </div>
+                        {news.content && (
+                          <div style={{
+                            fontSize: '12px',
+                            color: '#555',
+                            lineHeight: '1.5',
+                            whiteSpace: 'pre-wrap', // 줄바꿈 유지
+                            wordBreak: 'break-word' // 긴 단어 줄바꿈
+                          }}>
+                            {news.content}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '40px 20px',
+                    color: '#888'
+                  }}>
+                    <div style={{fontSize: '14px', marginBottom: '8px'}}>
+                      📰 관련 뉴스가 없습니다
+                    </div>
+                    <div style={{fontSize: '12px'}}>
+                      채팅에서 질문하시면 관련 뉴스를 확인할 수 있습니다
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </>
         )}

@@ -21,7 +21,7 @@ const CentralArea: React.FC<CentralAreaProps> = ({
   stockCode: propStockCode, 
   companyName: propCompanyName 
 }) => {
-  const { stockData } = useStock();
+  const { stockData, setNewsData } = useStock();
   const { username, isAuthenticated, isLoading: authLoading } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -116,6 +116,9 @@ const CentralArea: React.FC<CentralAreaProps> = ({
           sources: ragResponse.sources
         };
         setMessages(prev => [...prev, aiMessage]);
+        if (ragResponse.sources && ragResponse.sources.length > 0) {
+          setNewsData(ragResponse.sources);
+        }
       } else {
         // 에러 메시지 표시
         const errorMessage: Message = {

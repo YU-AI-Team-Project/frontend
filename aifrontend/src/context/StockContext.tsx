@@ -8,6 +8,8 @@ interface StockContextType {
   setIsLoading: (loading: boolean) => void;
   error: string | null;
   setError: (error: string | null) => void;
+  newsData: any[];
+  setNewsData: (news: any[]) => void;
 }
 
 // 기본값을 가진 Context를 생성합니다
@@ -18,6 +20,8 @@ const StockContext = createContext<StockContextType>({
   setIsLoading: () => {},
   error: null,
   setError: () => {},
+  newsData: [],
+  setNewsData: () => {},
 });
 
 interface StockProviderProps {
@@ -29,6 +33,7 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
   const [stockData, setStockData] = useState<StockDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [newsData, setNewsData] = useState<any[]>([]);
   console.log(stockData);
 
   return (
@@ -40,6 +45,8 @@ export const StockProvider: React.FC<StockProviderProps> = ({ children }) => {
         setIsLoading,
         error,
         setError,
+        newsData,
+        setNewsData,
       }}
     >
       {children}
